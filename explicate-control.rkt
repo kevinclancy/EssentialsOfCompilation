@@ -103,27 +103,7 @@
     [else (error "explicate-pred unhandled case" cond)]))
 
 (define (explicate-effect e cont)
-  (match e
-    [(Var x) cont]
-    [(Int n) cont]
-    [(Bool b) cont]
-    [(Prim op es) cont] ; TODO: we need to handle the read primitive here
-    [(Void) cont]
-    [(Let x rhs body)
-     (explicate-assign rhs x (explicate-effect body cont))]
-    [(GetBang x) cont]
-    [(SetBang x e)
-     (explicate-assign e x cont)]
-    [(Begin es body)
-     (for/fold
-      ([cont^ (explicate-effect body cont)])
-      ([e es])
-      (explicate-effect e cont^))]
-    [(WhileLoop cnd body)
-     (define loop-label (gensym 'loop))
-     (define body^ (create-block (explicate-effect body (Goto loop-label))))
-     (create-block (explicate-pred cnd body^ cont) loop-label)]
-    [else (error "explicate-effect unhandled case" e)]))
+  (error "todo: implement this"))
 
 (define (explicate-control p)
   (set! basic-blocks '())
