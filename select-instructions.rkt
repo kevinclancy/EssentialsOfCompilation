@@ -96,6 +96,10 @@
       (Instr 'movq (list (Reg 'rax) (Var x)))
       )
      ]
+    [(Assign (Var x) (Void))
+     (list
+      (Instr 'movq (list (Imm 0) (Var x)))
+      )]
     [(Assign (Var x) (Int n))
      (list
       (Instr 'movq (list (Imm n) (Var x)))
