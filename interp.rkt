@@ -241,6 +241,7 @@
 
     (define/public (get-name ast)
       (match ast
+        [(Imm n) (number->string n)]
 	[(or (Var x) (Reg x)) x]
 	[(Deref 'rbp n) n]
 	[else

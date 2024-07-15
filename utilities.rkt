@@ -179,7 +179,7 @@ Changelog:
     (error 'at-debug-level? "expected non-negative integer ~a" n))
   (>= (debug-level) n))
 
-(define (test-verbosity)
+(define (test-verbosity) 
   (cond [(>= (debug-level) 1) 'verbose]
         [else 'normal]))
 
