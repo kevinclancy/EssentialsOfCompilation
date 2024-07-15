@@ -34,32 +34,8 @@
     mapping)
   
 (define (build-cfg p)
-
-  (define cfg (make-multigraph '()))
+  (error "todo: complete this function")) ; hint: use multigraph.rkt
   
-  (define (add-edges-from-instr! from-label instr)
-    (match instr
-      [(Jmp to-label) (add-directed-edge! cfg from-label to-label)]
-      [(JmpIf cc to-label) (add-directed-edge! cfg from-label to-label)]
-      [else '()]))
-  
-  (define (add-edges-from-block! block)
-    (match block
-      [(cons label (Block info instrs))
-       (for [(instr instrs)] (add-edges-from-instr! label instr))]))
-
-  (define (add-label! block)
-    (match block
-      [(cons label (Block info instrs))
-       (add-vertex! cfg label)]))
-
-  (match p
-    [(X86Program info blocks)
-     (for [(b blocks)] (add-label! b))
-     (for [(b blocks)] (add-edges-from-block! b))
-     (remove-vertex! cfg 'conclusion)
-     ;(add-directed-edge! cfg 'start 'conclusion)
-     cfg]))
 
 (define (uncover-live p)
   ; we add a list of live-after sets to each block. Recall that a program contains
