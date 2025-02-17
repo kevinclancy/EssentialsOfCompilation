@@ -14,7 +14,7 @@
 
 ;; The interpreters in this file are for the intermediate languages
 ;; produced by the various passes of the compiler.
-;; 
+;;
 ;; The interpreters for the source languages (Lvar, Lif, ...)
 ;; and the C intermediate languages Cvar and Cif
 ;; are in separate files, e.g., interp-Rvar.rkt.
@@ -44,7 +44,7 @@
 #;(define interp-C2
   (lambda (p)
     (send (new interp-R3-class) interp-C p)))
-  
+
 #;(define interp-C3
   (lambda (p)
     (send (new interp-R4-class) interp-C p)))
@@ -88,7 +88,7 @@
 ;; The interp-x86-2 interpreter takes a program of the form
 ;; (X86Program info blocks)
 ;; Also, the info field must be an association list
-;; with a key 'num-root-spills whose values is 
+;; with a key 'num-root-spills whose values is
 ;; the number of spills to the root stack.
 (define interp-x86-2
   (lambda (p)
@@ -196,7 +196,7 @@
           ))
         (verbose "C0/interp-C-exp" ast result)
         result))
-          
+
     (define/public (interp-C-tail env)
       (lambda (ast)
         (match ast
@@ -209,7 +209,7 @@
           [else
            (error "interp-C-tail unhandled" ast)]
           )))
-    
+
     (define/public (interp-C-stmt env)
       (lambda (ast)
         (verbose "C0/interp-C-stmt" ast)
@@ -223,7 +223,7 @@
           [else
            (error "interp-C-stmt unhandled" ast)]
           )))
-          
+
     (define/public (interp-C ast)
       (debug "R1/interp-C" ast)
       (match ast
@@ -241,6 +241,7 @@
 
     (define/public (get-name ast)
       (match ast
+        [(Imm n) (number->string n)]
 	[(or (Var x) (Reg x)) x]
 	[(Deref 'rbp n) n]
 	[else
@@ -324,7 +325,7 @@
            ((interp-x86-instr env) ss)]
           [else
            (error "R1/interp-x86-block unhandled" ast)])))
-      
+
     (define/public (interp-x86 env)
       (lambda (ast)
         (when (pair? ast)
@@ -337,7 +338,7 @@
              (lookup 'rax result-env))]
           [else (error "R1/interp-x86 no match in for" ast)]
           )))
-    
+
     )) ;; class interp-R1-class
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -405,7 +406,7 @@
                    [#t #t] [#f #f])]
              [#f #f])]
           [(If cnd thn els)
-           (match (recur cnd) 
+           (match (recur cnd)
              [#t (recur thn)]
              [#f (recur els)]
              [else
@@ -424,7 +425,7 @@
         (copious "R2/interp-C-exp" ast result)
         result))
 
-    (define/override (interp-C-tail env)    
+    (define/override (interp-C-tail env)
       (lambda (ast)
 	(copious "R2/interp-C-tail" ast)
 	(match ast
@@ -436,7 +437,7 @@
            ((interp-C-tail env) (goto-label label))]
           [else ((super interp-C-tail env) ast)]
           )))
-      
+
     (define/override (interp-C ast)
       (copious "R2/interp-C" ast)
       (match ast
@@ -460,7 +461,7 @@
         [(ByteReg r)
          (super get-name (Reg (byte2full-reg r)))]
         [else (super get-name ast)]))
-    
+
     ;; Extending the set of known operators is essentially the
     ;; same as overriding the interp-x86-op with new functionallity
     (set! x86-ops (hash-set* x86-ops
@@ -543,7 +544,7 @@
           [(cons (Instr 'cmpq (list s2 s1)) ss)
            (let* ([v1 ((interp-x86-exp env) s1)]
                   [v2 ((interp-x86-exp env) s2)]
-                  [eflags 
+                  [eflags
                    (cond [(< v1 v2) 'less]
                          [(> v1 v2) 'greater]
                          [else 'equal])])
@@ -724,7 +725,7 @@
         [`(vector-proxy ,v ,rs ,ws)
          (define v^ (scheme-vector-ref v i))
          (define r (vector-ref rs i))
-         (apply-fun (lambda (env) (interp-scheme-exp env)) 
+         (apply-fun (lambda (env) (interp-scheme-exp env))
                     r (list v^))]
         [else
          (vector-ref vec i)]))
@@ -860,7 +861,7 @@
            (define new-env ((interp-C-stmt env) s))
            ((interp-C-tail new-env) t)]
           [else ((super interp-C-tail env) ast)])))
-    
+
     (define/override (interp-C ast)
       (copious "R3/interp-C" ast)
       (match ast
@@ -877,6 +878,7 @@
 	(match ast
 	  [(Global label) (fetch-global label)]
 	  [(Deref r i) #:when (not (eq? r 'rbp))
+           (printf "Deref ~a ~a\n" r i)
 	   (define base ((interp-x86-exp env) (Reg r)))
 	   (define addr (+ base i))
 	   ((memory-read) addr)]
@@ -991,7 +993,7 @@
                                   (crop-to-64bits (arithmetic-shift v n))))
                      'orq `(2 ,bitwise-ior)
                      ))
-    
+
     ));; interp-R3-class
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1000,7 +1002,7 @@
 (define interp-R4-class
   (class interp-R3-class
     (super-new)
-    (inherit primitives interp-op initialize! 
+    (inherit primitives interp-op initialize!
              return-from-tail interp-x86-block memory-read memory-write!
              interp-x86-store)
 
@@ -1015,7 +1017,7 @@
          (define new-env (append (map cons xs arg-vals) lam-env))
          ((interp new-env) body)]
         [else (error 'apply-fun "expected function, not ~a" fun-val)]))
-    
+
     (define/public (non-apply-ast)
       (set-union (primitives)
 		 (set 'if 'let 'define 'program 'has-type 'void)))
@@ -1061,7 +1063,7 @@
         [`(vector-proxy ,v ,rs ,ws)
          (define v^ (F-vector-ref v i))
          (define r (vector-ref rs i))
-         (apply-fun (lambda (env) (interp-F env)) 
+         (apply-fun (lambda (env) (interp-F env))
                     r (list v^))]
         [else
          (vector-ref vec i)]))
@@ -1198,7 +1200,7 @@
         [else
          (error "R4/interp-C-def unhandled" ast)]
         ))
-    
+
     (define/override (interp-C ast)
       (verbose "R4/interp-C" ast)
       (match ast
@@ -1235,14 +1237,14 @@
         [else v]))
 
     (define root-stack-pointer 0)
-    
+
     (define/public (call-function f-val cont-ss env)
       (match f-val
 	[(X86Function info blocks def-env)
 	 (debug "interp-x86 call-function" (observe-value f-val))
          (define n (dict-ref info 'num-params))
          (define f (dict-ref info 'name))
-         (define root-spills (dict-ref info 'num-root-spills #f))         
+         (define root-spills (dict-ref info 'num-root-spills #f))
 	 ;; copy argument registers over to new-env
 	 (define passing-regs
 	   (filter (lambda (p) p)
@@ -1294,7 +1296,7 @@
              (define res ((memory-read) (+ vec (* (add1 i) 8))))
              ((interp-x86-instr (cons (cons 'rax res) env)) cont-ss)]
             ))
-    
+
     #;(define (apply-vector-set! vec i val cont-ss env)
       (define tag ((memory-read) vec))
       (cond [(equal? (arithmetic-shift tag -63) 1)
@@ -1324,7 +1326,7 @@
            (debug "tail jmp" ast)
            (define f-val ((interp-x86-exp env) f))
            (call-function f-val '() env)]
-          [(cons (Callq f _) ss) 
+          [(cons (Callq f _) ss)
            #:when (not (set-member? (builtin-funs) f))
            (call-function (lookup f env) ss env)]
           [(cons (Callq 'exit _) ss)
@@ -1338,7 +1340,7 @@
         [(Def f ps rt info blocks)
          (cons f (X86Function (dict-set info 'name f) blocks '()))]
         ))
-        
+
     ;; The below applies before register allocation
     (define/override (interp-pseudo-x86 env)
       (lambda (ast)
@@ -1352,12 +1354,12 @@
            ;; Put the functions in the globals table
            (for ([(label fun) (in-dict top-level)])
              (dict-set! global-label-table label (box fun)))
-             
+
            (define env^ (list (cons 'r15 (unbox rootstack_begin))))
            (define result-env (call-function (lookup 'main top-level) '() env^))
            (lookup 'rax result-env)]
           )))
-    
+
     ;; The below applies after register allocation -Jeremy
     (define/override (interp-x86 env)
       (lambda (ast)
@@ -1391,7 +1393,7 @@
     (define/override (primitives)
       (set-union (super primitives)
 		 (set 'procedure-arity)))
-    
+
     (define/override (non-apply-ast)
       (set-union (super non-apply-ast)
 		 (set 'global-value 'allocate 'collect)))
@@ -1410,7 +1412,7 @@
 	 [else (super interp-op op)]
 	 ))
 
-    
+
     (define/override (interp-scheme-exp env)
       (lambda (ast)
 	(verbose "R5/interp-scheme" ast)
@@ -1681,7 +1683,7 @@
                                  lam-env))
          ((interp new-env) body)]
         [else (error 'apply-fun "expected function, not ~a" fun-val)]))
-    
+
     (define/override (interp-F env)
       (lambda (ast)
         (verbose "R8/interp-F starting" ast)
@@ -1735,7 +1737,7 @@
            env]
           [else ((super interp-C-stmt env) ast)]
           )))
-    
+
     )) ;; interp-R8-class
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1768,7 +1770,7 @@
     (define (vector-proxy? vec)
       (define tag ((memory-read) vec))
       (equal? 1 (bitwise-and (arithmetic-shift tag -57) 1)))
-    
+
     (define (proxy-vector-length vec)
       (copious "gradual/proxy-vector-length" vec)
       (cond [(vector-proxy? vec)
@@ -1776,7 +1778,7 @@
              (copious "proxy: underlying vec " vec^)
              (proxy-vector-length vec^)]
             [else (interp-vector-length vec)]))
-    
+
     (define (proxy-vector-ref vec i)
       (cond [(vector-proxy? vec)
              (define vec^ (interp-vector-ref vec 0))
@@ -1792,7 +1794,7 @@
              (define arg^ (apply-closure wr arg '() '()))
              (proxy-vector-set! vec^ i arg^)]
             [else (interp-vector-set! vec i arg)]))
-    
+
     (define/override (interp-x86-instr env)
       (lambda (ast)
         (when (pair? ast)
@@ -1815,7 +1817,7 @@
            ((interp-x86-instr (cons (cons 'rax v) env)) ss)]
           [else ((super interp-x86-instr env) ast)]
           )))
-    
+
     ))
 
 (define min-int64 (- (arithmetic-shift 1 63)))

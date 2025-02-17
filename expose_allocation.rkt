@@ -48,7 +48,7 @@
     [(Bool b) (Bool b)]
     [(Void) (Void)]
     [(Let x e body)
-     (Let x (expose-alloc-exp e) body)]
+     (Let x (expose-alloc-exp e) (expose-alloc-exp body))]
     [(If e1 e2 e3)
      (If (expose-alloc-exp e1) (expose-alloc-exp e2) (expose-alloc-exp e3))]
     [(GetBang var) (GetBang var)]
